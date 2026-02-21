@@ -37,3 +37,27 @@ Handling 500 errors during callback
   Message scanning job (/jobs/scan) retrieving Gmail data
   Processed results: sender/message counts, top senders list
   Basic UI feedback: “Loading…” → replaced by actual counts
+
+---
+
+## Phase 5 - Vision Realization & Scaling
+Phase 5 brought the application out of its "demo" constraints by implementing heavy, resilient logic capable of churning through thousands of emails. 
+
+### Core Concepts Introduced
+
+**1. Deep Scanning Engine (Continuous Pagination)**
+*   Broke the initial 50-thread hardcap.
+*   Implemented Google API `nextPageToken` cursor handling in the FastApi backend framework.
+*   Added a frontend "Load More Senders" component for infinite scrolling deep into historical inbox data.
+
+**2. True Protocol Unsubscribe**
+*   Upgraded the backend scanner to scrape and persist hidden `List-Unsubscribe` headers securely.
+*   Implemented live `requests` execution during `POST /plan/execute` to fire physical `HTTP POST/GET` unsubscription signals directly to the promotional company servers before archiving the email.
+
+**3. Global Category Wiping**
+*   Created a fast `DELETE /categories/{label}` backend API route.
+*   Built "Wipe Clean" UI buttons directly onto the interactive Unread Breakdown modal allowing one-click destruction of System Folders (e.g., *Promotions*, *Updates*).
+
+**4. Rate-Limit Resilience (Batch Networks)**
+*   Overhauled `messages.trash` and `messages.modify` execution loops.
+*   Instead of firing hundreds of sequential REST requests that trigger `429 Too Many Requests` API blockages, the engine now compiles execution chunks into `BatchHttpRequest` blocks parsing 100 emails concurrently per round-trip.
