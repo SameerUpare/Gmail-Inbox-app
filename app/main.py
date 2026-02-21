@@ -4,6 +4,8 @@ from __future__ import annotations
 from functools import lru_cache
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.sessions import SessionMiddleware
 from pydantic_settings import BaseSettings
 
 from app.db.base import Base, engine
@@ -18,28 +20,33 @@ try:
 except Exception:  # pragma: no cover
     insights_router = None  # type: ignore
 
-
-class Settings(BaseSettings):
-    # Provide defaults so `Settings()` is mypy-safe; env will override at runtime.
-    APP_NAME: str = "Gmail Inbox Cleaner"
-    OWNER_EMAIL: str = "owner@example.com"
-    GOOGLE_CLIENT_ID: str = "dummy-client-id"
-    GOOGLE_CLIENT_SECRET: str = "dummy-client-secret"
-    GOOGLE_REDIRECT_URI: str = "http://localhost/oauth/callback"
-    GOOGLE_SCOPES: str = "https://www.googleapis.com/auth/gmail.readonly"
-    DATABASE_URL: str = "sqlite+aiosqlite:///./app.db"
-    # Enable/disable dev auto-creation of tables at startup (migrations in prod)
-    DEV_CREATE_ALL: bool = True
+from app.routes.scan import router as scan_router
+from app.routes.senders import router as senders_router
+from app.routes.audit import router as audit_router
+from app.oauth.routes import router as oauth_router
 
 
-@lru_cache
-def get_settings() -> Settings:
-    return Settings()
+from app.config import get_settings
 
 
 def create_app() -> FastAPI:
     settings = get_settings()
     app = FastAPI(title=settings.APP_NAME)
+
+    # CORS configuration
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],  # Must be explicit for credentials
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+    
+    # Required for OAuth flow state parameter
+    app.add_middleware(
+        SessionMiddleware,
+        secret_key="secret-session-key-for-dev-only"
+    )
 
     # Routers
     app.include_router(reports_router)
@@ -47,6 +54,10 @@ def create_app() -> FastAPI:
         app.include_router(actions_router)  # /actions/plan
     if insights_router:
         app.include_router(insights_router)  # /insights/unsubscribe_stats
+    app.include_router(scan_router)
+    app.include_router(senders_router)
+    app.include_router(audit_router)
+    app.include_router(oauth_router)
 
     @app.on_event("startup")
     async def startup_create_tables() -> None:

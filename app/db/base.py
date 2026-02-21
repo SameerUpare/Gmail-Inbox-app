@@ -47,6 +47,14 @@ class Audit(Base):
     payload: Mapped[str] = mapped_column(Text, nullable=False, default="{}")
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
 
+class AuditLog(Base):
+    __tablename__ = "audit_logs"
+
+    id: Mapped[str] = mapped_column(String(100), primary_key=True)
+    timestamp: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+    event_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    details: Mapped[str] = mapped_column(Text, nullable=False)
+
 
 class ActionPlan(Base):
     __tablename__ = "action_plans"
@@ -64,3 +72,13 @@ class UndoWindow(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     decision_id: Mapped[int] = mapped_column(Integer, nullable=False)  # (FK can be added later)
     expires_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+
+class User(Base):
+    __tablename__ = "users"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    email: Mapped[str] = mapped_column(String(320), unique=True, nullable=False)
+    name: Mapped[str] = mapped_column(String(200), nullable=True)
+    access_token: Mapped[str] = mapped_column(Text, nullable=True)
+    refresh_token: Mapped[str] = mapped_column(Text, nullable=True)
+    expires_at: Mapped[int] = mapped_column(Integer, nullable=True)
