@@ -61,3 +61,9 @@ Phase 5 brought the application out of its "demo" constraints by implementing he
 **4. Rate-Limit Resilience (Batch Networks)**
 *   Overhauled `messages.trash` and `messages.modify` execution loops.
 *   Instead of firing hundreds of sequential REST requests that trigger `429 Too Many Requests` API blockages, the engine now compiles execution chunks into `BatchHttpRequest` blocks parsing 100 emails concurrently per round-trip.
+
+---
+
+## Project Audit & Status
+Following the stabilization of Phase 5, a comprehensive technical and security architecture scan was conducted on the codebase. Check out the [Project Audit Report](./AUDIT_REPORT.md) for details regarding Google API network resilience, frontend CORS stability, and known CI/CD testing gaps (`PYTHONPATH` integration for `.github/workflows`).
+
